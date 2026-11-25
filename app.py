@@ -27,7 +27,7 @@ except Exception as e:
 st.title("🏠 Lifestyle-Only Roommate Finder")
 st.markdown("""
 Find your compatible roommates using our machine learning model. 
-**Clustering is based purely on lifestyle preferences (gender is never used to group or score similarity!).**
+**Clustering is based purely on lifestyle preferences.**
 """)
 
 # Get all unique interests across dataset for multiselect list
