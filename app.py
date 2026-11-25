@@ -394,14 +394,13 @@ st.markdown(f"""
         <div class="rm-logo-box">{ICONS['logo']}</div>
         <span class="rm-brand-title">RoomMatch</span>
     </div>
-    <span class="rm-nav-badge">K-Modes Clustering Model</span>
 </div>
 
 <div class="rm-hero">
     <span class="rm-eyebrow">Lifestyle-Based Roommate Matching</span>
     <h1>Find a roommate whose routine fits yours.</h1>
     <p>
-        Enter your daily habits, sleep schedule, and budget preferences below. Our trained K-Modes machine learning model groups you into a compatible lifestyle cohort and explains every match score clearly.
+        Enter your daily habits, sleep schedule, and budget preferences below to discover roommates whose living routines naturally align with yours.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -646,28 +645,11 @@ if st.button("Find Compatible Roommates", type="primary"):
                 ascending=[False, False]
             ).head(5)
 
-    # Cohort Summary Banner
-    cohort_note = (
-        "Expanded search across all cohorts because fewer than 5 candidates remained in your primary cluster."
-        if searched_all_clusters
-        else f"Evaluated {total_cohort_count} students in your cohort ({hidden_by_gender} filtered out by mutual gender preferences)."
-    )
-
-    st.markdown(f"""
-    <div class="rm-cohort-banner">
-        <div>
-            <div class="rm-cohort-title">Profile Assigned to Lifestyle Cohort #{predicted_cluster}</div>
-            <div class="rm-cohort-sub">{html.escape(cohort_note)}</div>
-        </div>
-        <span class="rm-cluster-pill">Cluster #{predicted_cluster}</span>
-    </div>
-    """, unsafe_allow_html=True)
-
     st.markdown("""
-    <div style="margin-bottom: 14px;">
+    <div style="margin: 22px 0 14px 0;">
         <span style="font-size: 0.72rem; font-weight: 800; color: #7c3aed; letter-spacing: 0.08em; text-transform: uppercase;">RECOMMENDATIONS</span>
         <h2 style="font-size: 1.55rem; font-weight: 800; color: #0f172a; margin: 2px 0 4px 0;">Top Compatible Roommates</h2>
-        <p style="font-size: 0.82rem; color: #64748b; margin: 0;">Ranked by lifestyle attribute overlap within your eligible cohort.</p>
+        <p style="font-size: 0.82rem; color: #64748b; margin: 0;">Sorted by how closely their daily routines and living preferences match yours.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -716,59 +698,44 @@ if st.button("Find Compatible Roommates", type="primary"):
                     for interest in raw_ints[:5]
                 ])
 
-            st.markdown(f"""
-            <div class="rm-match-card">
-                <div class="rm-card-top">
-                    <div class="rm-student-info">
-                        <div class="rm-avatar">{html.escape(initials)}</div>
-                        <div>
-                            <div class="rm-student-name">
-                                Student #{html.escape(student_id_str)}
-                                <span class="rm-meta-pill">{html.escape(gender_label)}</span>
-                                <span class="rm-meta-pill">{html.escape(room_label)}</span>
-                            </div>
-                            <div class="rm-student-sub">
-                                {ICONS['pin']}
-                                <span>{html.escape(loc_label)}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="rm-score-box">
-                        <div class="rm-score-val">{match_percentage}%</div>
-                        <div class="rm-score-tag">{tier_label}</div>
-                    </div>
-                </div>
+            aligned_block = shared_pills_html if shared_pills_html else '<span class="rm-tag-diff">No exact trait matches</span>'
+            diff_section_html = (
+                f'<div style="margin-top: 12px;">'
+                f'<div style="font-size: 0.68rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Differing Traits</div>'
+                f'<div class="rm-tags-row">{diff_pills_html}</div>'
+                f'</div>'
+                if diff_pills_html else ''
+            )
+            interests_heading = "Shared Interests" if selected_interests else "Profile Interests"
 
-                <div style="margin-top: 10px;">
-                    <div style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
-                        Aligned Lifestyle Traits
-                    </div>
-                    <div class="rm-tags-row">
-                        {shared_pills_html if shared_pills_html else '<span class="rm-tag-diff">No exact trait matches</span>'}
-                    </div>
-                </div>
-
-                {f'''
-                <div style="margin-top: 12px;">
-                    <div style="font-size: 0.68rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
-                        Differing Traits
-                    </div>
-                    <div class="rm-tags-row">{diff_pills_html}</div>
-                </div>
-                ''' if diff_pills_html else ''}
-
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-                    <div style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
-                        {"Shared Interests" if selected_interests else "Profile Interests"}
-                    </div>
-                    <div class="rm-tags-row">{interests_html}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown(f"""
-    <div class="rm-footer-note">
-        {ICONS['shield']}
-        <span>Recommendations are generated by your K-Modes clustering model based on lifestyle similarity. Students should connect and verify housing details directly before finalizing arrangements.</span>
-    </div>
-    """, unsafe_allow_html=True)
+            card_html = (
+                f'<div class="rm-match-card">'
+                f'<div class="rm-card-top">'
+                f'<div class="rm-student-info">'
+                f'<div class="rm-avatar">{html.escape(initials)}</div>'
+                f'<div>'
+                f'<div class="rm-student-name">'
+                f'Student #{html.escape(student_id_str)} '
+                f'<span class="rm-meta-pill">{html.escape(gender_label)}</span> '
+                f'<span class="rm-meta-pill">{html.escape(room_label)}</span>'
+                f'</div>'
+                f'<div class="rm-student-sub">{ICONS["pin"]} <span>{html.escape(loc_label)}</span></div>'
+                f'</div>'
+                f'</div>'
+                f'<div class="rm-score-box">'
+                f'<div class="rm-score-val">{match_percentage}%</div>'
+                f'<div class="rm-score-tag">{tier_label}</div>'
+                f'</div>'
+                f'</div>'
+                f'<div style="margin-top: 10px;">'
+                f'<div style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Aligned Lifestyle Traits</div>'
+                f'<div class="rm-tags-row">{aligned_block}</div>'
+                f'</div>'
+                f'{diff_section_html}'
+                f'<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">'
+                f'<div style="font-size: 0.68rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">{interests_heading}</div>'
+                f'<div class="rm-tags-row">{interests_html}</div>'
+                f'</div>'
+                f'</div>'
+            )
+            st.markdown(card_html, unsafe_allow_html=True)
