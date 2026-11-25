@@ -26,24 +26,8 @@ ICONS = {
     "pin": '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
     "check": '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
     "shield": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
-    "info": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
-    "send": '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>',
-    "message": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+    "info": '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>'
 }
-
-# Initialize persistent session state for matches, connection requests, and chats
-if "computed_matches" not in st.session_state:
-    st.session_state.computed_matches = None
-if "connections" not in st.session_state:
-    # Maps student_id -> {"status": "pending" | "accepted", "student": dict}
-    st.session_state.connections = {}
-if "chat_threads" not in st.session_state:
-    # Maps student_id -> list of {"sender": "me" | "them", "text": str, "time": str}
-    st.session_state.chat_threads = {}
-if "active_chat_id" not in st.session_state:
-    st.session_state.active_chat_id = None
-if "selected_interests_saved" not in st.session_state:
-    st.session_state.selected_interests_saved = []
 
 st.markdown("""
 <style>
@@ -367,63 +351,17 @@ st.markdown("""
         font-size: 0.74rem;
         font-weight: 600;
     }
-    /* Secondary Button Styling for Connect & Chat Actions */
-    div.stButton > button[kind="secondary"] {
-        background-color: #f5f3ff !important;
-        color: #7c3aed !important;
-        border: 1px solid #ddd6fe !important;
-        border-radius: 12px !important;
-        font-weight: 700 !important;
-        font-size: 0.82rem !important;
-        padding: 0.55rem 1.2rem !important;
-        transition: all 0.2s ease !important;
-    }
-    div.stButton > button[kind="secondary"]:hover {
-        background-color: #ede9fe !important;
-        border-color: #c4b5fd !important;
-    }
-    /* Chat Bubble Styles */
-    .rm-chat-box {
+    .rm-footer-note {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 22px;
-        padding: 20px 24px;
-        margin-top: 12px;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
-    }
-    .rm-msg-row-me {
+        border-radius: 16px;
+        padding: 14px 18px;
+        font-size: 0.78rem;
+        color: #64748b;
         display: flex;
-        justify-content: flex-end;
-        margin-bottom: 10px;
-    }
-    .rm-msg-row-them {
-        display: flex;
-        justify-content: flex-start;
-        margin-bottom: 10px;
-    }
-    .rm-bubble-me {
-        background-color: #7c3aed;
-        color: #ffffff;
-        padding: 10px 15px;
-        border-radius: 16px 16px 4px 16px;
-        max-width: 72%;
-        font-size: 0.85rem;
-        line-height: 1.45;
-    }
-    .rm-bubble-them {
-        background-color: #f1f5f9;
-        color: #1e293b;
-        padding: 10px 15px;
-        border-radius: 16px 16px 16px 4px;
-        max-width: 72%;
-        font-size: 0.85rem;
-        line-height: 1.45;
-    }
-    .rm-msg-time {
-        font-size: 0.66rem;
-        opacity: 0.72;
-        margin-top: 4px;
-        text-align: right;
+        align-items: center;
+        gap: 10px;
+        margin-top: 24px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -707,29 +645,18 @@ if st.button("Find Compatible Roommates", type="primary"):
                 ascending=[False, False]
             ).head(5)
 
-    # Persist matches in session_state so clicking "Connect" or "Send" doesn't reset results
-    st.session_state.computed_matches = final_matches.reset_index(drop=True) if not final_matches.empty else pd.DataFrame()
-    st.session_state.selected_interests_saved = list(selected_interests)
-
-# ============================================================================
-# 6. DISPLAY STYLED RECOMMENDATIONS & INTERACTIVE ROOMMATE CONNECTIONS
-# ============================================================================
-if st.session_state.computed_matches is not None:
-    final_matches_df = st.session_state.computed_matches
-    saved_interests = st.session_state.selected_interests_saved
-
     st.markdown("""
     <div style="margin: 22px 0 14px 0;">
         <span style="font-size: 0.72rem; font-weight: 800; color: #7c3aed; letter-spacing: 0.08em; text-transform: uppercase;">RECOMMENDATIONS</span>
         <h2 style="font-size: 1.55rem; font-weight: 800; color: #0f172a; margin: 2px 0 4px 0;">Top Compatible Roommates</h2>
-        <p style="font-size: 0.82rem; color: #64748b; margin: 0;">Sorted by how closely their daily routines and living preferences match yours. Request to connect with one or more matches below.</p>
+        <p style="font-size: 0.82rem; color: #64748b; margin: 0;">Sorted by how closely their daily routines and living preferences match yours.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    if final_matches_df.empty:
+    if final_matches.empty:
         st.warning("No compatible matches found matching your current filters. Try widening your location or room type preferences.")
     else:
-        for idx, row in final_matches_df.iterrows():
+        for _, row in final_matches.reset_index().iterrows():
             match_percentage = int(round(row['similarity_score'] * 100))
             if match_percentage >= 85:
                 tier_label = "Very high fit"
@@ -756,7 +683,7 @@ if st.session_state.computed_matches is not None:
                 for item in row['different_items']
             ])
 
-            if saved_interests:
+            if selected_interests:
                 if row['shared_interests_list']:
                     interests_html = "".join([
                         f'<span class="rm-tag-interest">{html.escape(interest)}</span>'
@@ -779,7 +706,7 @@ if st.session_state.computed_matches is not None:
                 f'</div>'
                 if diff_pills_html else ''
             )
-            interests_heading = "Shared Interests" if saved_interests else "Profile Interests"
+            interests_heading = "Shared Interests" if selected_interests else "Profile Interests"
 
             card_html = (
                 f'<div class="rm-match-card">'
@@ -812,186 +739,3 @@ if st.session_state.computed_matches is not None:
                 f'</div>'
             )
             st.markdown(card_html, unsafe_allow_html=True)
-
-            # Interactive Connect & Consent Action Bar under each match card
-            conn_state = st.session_state.connections.get(student_id_str)
-            act_col1, act_col2, _ = st.columns([1.6, 1.8, 3.6])
-
-            if conn_state is None:
-                with act_col1:
-                    if st.button(f"Request to connect", key=f"req_{student_id_str}_{idx}", type="secondary"):
-                        st.session_state.connections[student_id_str] = {
-                            "status": "pending",
-                            "student": {
-                                "id": student_id_str,
-                                "initials": initials,
-                                "location": loc_label,
-                                "room": room_label,
-                                "score": match_percentage,
-                                "shared": row["matching_items"]
-                            }
-                        }
-                        st.rerun()
-            elif conn_state["status"] == "pending":
-                with act_col1:
-                    st.markdown(
-                        '<div style="padding: 8px 14px; background:#fefce8; border:1px solid #fef08a; border-radius:12px; color:#854d0e; font-size:0.78rem; font-weight:700; text-align:center;">Request Sent (Pending)</div>',
-                        unsafe_allow_html=True
-                    )
-                with act_col2:
-                    if st.button("Accept & Unlock Chat", key=f"acc_{student_id_str}_{idx}", type="secondary"):
-                        st.session_state.connections[student_id_str]["status"] = "accepted"
-                        st.session_state.active_chat_id = student_id_str
-                        if student_id_str not in st.session_state.chat_threads:
-                            top_shared = ", ".join(row["matching_items"][:2]).lower() if row["matching_items"] else "daily routines"
-                            now_str = datetime.datetime.now().strftime("%I:%M %p")
-                            st.session_state.chat_threads[student_id_str] = [
-                                {
-                                    "sender": "them",
-                                    "text": f"Hi! Thanks for connecting — I saw we matched at {match_percentage}% and align on {top_shared}. Are you still looking around {loc_label}?",
-                                    "time": now_str
-                                }
-                            ]
-                        st.rerun()
-            elif conn_state["status"] == "accepted":
-                with act_col1:
-                    if st.button("Open Conversation", key=f"chat_{student_id_str}_{idx}", type="secondary"):
-                        st.session_state.active_chat_id = student_id_str
-                        st.rerun()
-                with act_col2:
-                    st.markdown(
-                        '<div style="padding: 8px 14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; color:#166534; font-size:0.78rem; font-weight:700; text-align:center;">Connected</div>',
-                        unsafe_allow_html=True
-                    )
-
-            st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
-
-# ============================================================================
-# 7. CONVERSATIONS & MESSAGING WORKSPACE (MULTI-ROOMMATE CHAT)
-# ============================================================================
-if st.session_state.connections:
-    st.markdown("""
-    <div style="margin: 34px 0 14px 0; padding-top: 24px; border-top: 1px solid #e2e8f0;">
-        <span style="font-size: 0.72rem; font-weight: 800; color: #7c3aed; letter-spacing: 0.08em; text-transform: uppercase;">MESSAGES</span>
-        <h2 style="font-size: 1.55rem; font-weight: 800; color: #0f172a; margin: 2px 0 4px 0;">Your Roommate Connections</h2>
-        <p style="font-size: 0.82rem; color: #64748b; margin: 0;">Switch between any potential roommates you've connected with to discuss housing options.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    list_col, chat_col = st.columns([1.2, 2.3], gap="large")
-
-    with list_col:
-        with st.container(border=True):
-            st.markdown(f"""
-            <div class="rm-section-header">
-                <div class="rm-section-icon">{ICONS['message']}</div>
-                <h3 class="rm-section-title">Connections ({len(st.session_state.connections)})</h3>
-            </div>
-            """, unsafe_allow_html=True)
-
-            for cid, cdata in st.session_state.connections.items():
-                s_info = cdata["student"]
-                status_badge = "Connected" if cdata["status"] == "accepted" else "Pending"
-                btn_label = f"Student #{cid} ({s_info['score']}%) — {status_badge}"
-                if st.button(btn_label, key=f"select_thread_{cid}", use_container_width=True):
-                    st.session_state.active_chat_id = cid
-                    st.rerun()
-
-    with chat_col:
-        active_id = st.session_state.active_chat_id
-        if active_id and active_id in st.session_state.connections:
-            active_conn = st.session_state.connections[active_id]
-            s_info = active_conn["student"]
-
-            with st.container(border=True):
-                st.markdown(
-                    f'<div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; border-bottom:1px solid #f1f5f9; margin-bottom:14px;">'
-                    f'<div style="display:flex; align-items:center; gap:12px;">'
-                    f'<div class="rm-avatar" style="width:42px; height:42px; font-size:0.85rem;">{html.escape(s_info["initials"])}</div>'
-                    f'<div>'
-                    f'<div style="font-weight:800; font-size:0.98rem; color:#0f172a;">Student #{html.escape(active_id)}</div>'
-                    f'<div style="font-size:0.75rem; color:#64748b;">{html.escape(s_info["location"])} • {html.escape(s_info["room"])}</div>'
-                    f'</div>'
-                    f'</div>'
-                    f'<span class="rm-nav-badge">{s_info["score"]}% Match</span>'
-                    f'</div>',
-                    unsafe_allow_html=True
-                )
-
-                if active_conn["status"] == "pending":
-                    st.info(f"Connection request sent to Student #{active_id}. Click **Accept & Unlock Chat** below to simulate mutual consent and start chatting.")
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        if st.button("Accept & Unlock Chat", key=f"panel_acc_{active_id}", type="primary"):
-                            st.session_state.connections[active_id]["status"] = "accepted"
-                            if active_id not in st.session_state.chat_threads:
-                                now_str = datetime.datetime.now().strftime("%I:%M %p")
-                                st.session_state.chat_threads[active_id] = [
-                                    {
-                                        "sender": "them",
-                                        "text": f"Hi! Glad we connected ({s_info['score']}% compatibility). Let's chat about housing near {s_info['location']}!",
-                                        "time": now_str
-                                    }
-                                ]
-                            st.rerun()
-                    with c2:
-                        if st.button("Cancel Request", key=f"panel_del_{active_id}", type="secondary"):
-                            del st.session_state.connections[active_id]
-                            st.session_state.active_chat_id = None
-                            st.rerun()
-                else:
-                    # Render conversation thread
-                    thread = st.session_state.chat_threads.get(active_id, [])
-                    bubbles_html = ""
-                    for msg in thread:
-                        safe_txt = html.escape(msg["text"])
-                        safe_time = html.escape(msg["time"])
-                        if msg["sender"] == "me":
-                            bubbles_html += (
-                                f'<div class="rm-msg-row-me">'
-                                f'<div class="rm-bubble-me">{safe_txt}<div class="rm-msg-time">{safe_time}</div></div>'
-                                f'</div>'
-                            )
-                        else:
-                            bubbles_html += (
-                                f'<div class="rm-msg-row-them">'
-                                f'<div class="rm-bubble-them">{safe_txt}<div class="rm-msg-time">{safe_time}</div></div>'
-                                f'</div>'
-                            )
-
-                    if not bubbles_html:
-                        bubbles_html = '<div style="text-align:center; color:#94a3b8; font-size:0.8rem; padding:24px 0;">You are connected! Send a message below to introduce yourself.</div>'
-
-                    st.markdown(
-                        f'<div style="max-height:300px; overflow-y:auto; padding:6px 4px 12px 4px;">{bubbles_html}</div>',
-                        unsafe_allow_html=True
-                    )
-
-                    # Message input form
-                    with st.form(key=f"chat_form_{active_id}", clear_on_submit=True):
-                        msg_col, send_col = st.columns([4.5, 1.2])
-                        with msg_col:
-                            outgoing_msg = st.text_input(
-                                "Message",
-                                placeholder=f"Write a message to Student #{active_id}...",
-                                label_visibility="collapsed"
-                            )
-                        with send_col:
-                            submitted = st.form_submit_button("Send", type="primary")
-
-                        if submitted and outgoing_msg.strip():
-                            now_str = datetime.datetime.now().strftime("%I:%M %p")
-                            st.session_state.chat_threads.setdefault(active_id, []).append({
-                                "sender": "me",
-                                "text": outgoing_msg.strip(),
-                                "time": now_str
-                            })
-                            st.rerun()
-        else:
-            with st.container(border=True):
-                st.markdown(
-                    '<div style="padding:48px 20px; text-align:center; color:#64748b; font-size:0.85rem;">'
-                    'Select a roommate connection on the left to open your conversation.'
-                    '</div>',
-                    unsafe_allow_html=True
-                )
