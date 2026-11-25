@@ -1,0 +1,6 @@
+streamlit
+pandas
+numpy
+kmodes
+joblib
+scikit-learn

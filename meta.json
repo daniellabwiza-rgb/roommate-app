@@ -1,0 +1,19 @@
+{
+  "features": [
+    "sleep_schedule",
+    "wake_time_band",
+    "smoking",
+    "drinking",
+    "cleanliness_band",
+    "noise_band",
+    "guests_preference",
+    "food_preference",
+    "pets",
+    "study_habit",
+    "budget_band"
+  ],
+  "budget_edges": [
+    9000.0,
+    12100.0
+  ]
+}
